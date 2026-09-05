@@ -20,7 +20,8 @@ export const NUMERIC_FIELDS = {
   numfloors: { label: 'floors', unit: '' },
   unitsres: { label: 'residential units', unit: '' },
   unitstotal: { label: 'total units', unit: '' },
-  yearbuilt: { label: 'year built', unit: '' },
+  // A year is a label, not a quantity: "before 1,930" reads as a mistake.
+  yearbuilt: { label: 'year built', unit: '', plain: true },
   builtfar: { label: 'built FAR', unit: '' },
   residfar: { label: 'permitted residential FAR', unit: '' },
   commfar: { label: 'permitted commercial FAR', unit: '' },
@@ -178,12 +179,13 @@ const fmt = new Intl.NumberFormat('en-US');
 /** One clause, in the analyst's words. This is what the sheet prints back. */
 export function describeClause(clause: Clause): string {
   if (clause.kind === 'numeric') {
-    const meta = NUMERIC_FIELDS[clause.field];
+    const meta: { label: string; unit: string; plain?: boolean } = NUMERIC_FIELDS[clause.field];
     const unit = meta.unit ? ` ${meta.unit}` : '';
-    const v = `${fmt.format(clause.value)}${unit}`;
+    const n = (x: number) => (meta.plain ? String(Math.round(x)) : fmt.format(x));
+    const v = `${n(clause.value)}${unit}`;
     switch (clause.op) {
       case 'between':
-        return `${meta.label} between ${v} and ${fmt.format(clause.value2 ?? clause.value)}${unit}`;
+        return `${meta.label} between ${v} and ${n(clause.value2 ?? clause.value)}${unit}`;
       case 'lt':
         return `${meta.label} under ${v}`;
       case 'lte':
