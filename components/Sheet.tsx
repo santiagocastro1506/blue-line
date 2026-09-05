@@ -27,8 +27,11 @@ type Status = {
   parcels?: number;
   bootMs?: number;
   modelConfigured?: boolean;
+  modelProvider?: 'anthropic' | 'gemini' | null;
   classes?: { cls: string; count: number }[];
 };
+
+const PROVIDER_NAME: Record<string, string> = { anthropic: 'Claude', gemini: 'Gemini' };
 
 type QueryState =
   | { kind: 'idle' }
@@ -542,7 +545,12 @@ export default function Sheet() {
             : 'Spatial engine developing…'}
         </span>
         {status.ready && status.modelConfigured === false && (
-          <span style={{ color: 'var(--line-quiet)' }}>Query field needs ANTHROPIC_API_KEY</span>
+          <span style={{ color: 'var(--line-quiet)' }}>
+            Query field needs ANTHROPIC_API_KEY or GEMINI_API_KEY
+          </span>
+        )}
+        {status.ready && status.modelProvider && (
+          <span>Query compiled by {PROVIDER_NAME[status.modelProvider] ?? status.modelProvider}</span>
         )}
       </footer>
     </div>

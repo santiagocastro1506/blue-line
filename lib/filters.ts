@@ -228,7 +228,9 @@ export const FILTER_TOOL_SCHEMA = {
       minItems: 1,
       maxItems: 8,
       items: {
-        oneOf: [
+        // `anyOf` rather than `oneOf`: it is the union keyword both providers
+        // support natively, so one schema serves Claude and Gemini alike.
+        anyOf: [
           {
             type: 'object',
             properties: {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getEngine } from '@/lib/db';
+import { resolveProvider } from '@/lib/model';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -49,7 +50,8 @@ export async function GET() {
       parcels: engine.parcelCount,
       bootMs: engine.bootMs,
       warmedInMs: Date.now() - started,
-      modelConfigured: Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
+      modelConfigured: Boolean(resolveProvider()),
+      modelProvider: resolveProvider(),
       classes: classes.map((c) => ({ cls: c.cls, count: Number(c.n) })),
       districts: districts.map((d) => ({ district: d.zonedist1, count: Number(d.n) })),
     });
@@ -59,7 +61,7 @@ export async function GET() {
         ready: false,
         error: 'The spatial engine did not start.',
         detail: err instanceof Error ? err.message : String(err),
-        modelConfigured: Boolean(process.env.ANTHROPIC_API_KEY?.trim()),
+        modelConfigured: Boolean(resolveProvider()),
       },
       { status: 503 },
     );

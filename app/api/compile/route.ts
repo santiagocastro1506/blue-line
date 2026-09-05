@@ -1,14 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import {
-  FILTER_TOOL_SCHEMA,
-  LAND_USE,
-  NUMERIC_FIELDS,
-  TEXT_FIELDS,
-  describeFilter,
-  filterSchema,
-} from '@/lib/filters';
+import { LAND_USE, NUMERIC_FIELDS, TEXT_FIELDS, describeFilter, filterSchema } from '@/lib/filters';
+import { compileWithModel, resolveProvider } from '@/lib/model';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -49,13 +43,13 @@ constraints the analyst did not ask for. If the phrase implies an ordering
 ("largest", "tallest", "oldest"), set sort.`;
 
 export async function POST(request: Request) {
-  const key = process.env.ANTHROPIC_API_KEY?.trim();
-  if (!key) {
+  const provider = resolveProvider();
+  if (!provider) {
     return NextResponse.json(
       {
         error: 'unconfigured',
         message:
-          'No model key is set, so the sheet will not guess at what you meant. Set ANTHROPIC_API_KEY to enable the query field.',
+          'No model key is set, so the sheet will not guess at what you meant. Set ANTHROPIC_API_KEY or GEMINI_API_KEY to enable the query field.',
       },
       { status: 501 },
     );
@@ -76,39 +70,23 @@ export async function POST(request: Request) {
   const started = Date.now();
 
   try {
-    const { default: Anthropic } = await import('@anthropic-ai/sdk');
-    const client = new Anthropic({ apiKey: key });
+    const { input, provenance } = await compileWithModel(provider, SYSTEM, parsed.data.q);
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-5',
-      max_tokens: 1024,
-      system: SYSTEM,
-      tools: [
-        {
-          name: 'set_filter',
-          description:
-            'Apply a structured filter to the tax lots on the sheet. This is the only way to answer.',
-          input_schema: FILTER_TOOL_SCHEMA,
-        },
-      ],
-      tool_choice: { type: 'tool', name: 'set_filter' },
-      messages: [{ role: 'user', content: parsed.data.q }],
-    });
-
-    const call = message.content.find((block) => block.type === 'tool_use');
-    if (!call || call.type !== 'tool_use') {
+    if (input === null || input === undefined) {
       return NextResponse.json(
         {
           error: 'not_understood',
-          message: 'That phrase did not resolve to a filter over these fields. Try naming a zoning district, a size, or a year.',
+          message:
+            'That phrase did not resolve to a filter over these fields. Try naming a zoning district, a size, or a year.',
         },
         { status: 422 },
       );
     }
 
     // The model's output is a proposal, not a result. It is validated against the
-    // same schema the compiler trusts before it goes anywhere near the database.
-    const validated = filterSchema.safeParse(call.input);
+    // same schema the compiler trusts before it goes anywhere near the database,
+    // and that is true whichever provider produced it.
+    const validated = filterSchema.safeParse(input);
     if (!validated.success) {
       return NextResponse.json(
         {
@@ -123,13 +101,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       filter: validated.data,
       readable: describeFilter(validated.data),
-      provenance: {
-        model: message.model,
-        stopReason: message.stop_reason,
-        inputTokens: message.usage.input_tokens,
-        outputTokens: message.usage.output_tokens,
-        elapsedMs: Date.now() - started,
-      },
+      provenance: { ...provenance, elapsedMs: Date.now() - started },
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
