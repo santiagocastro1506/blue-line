@@ -1,0 +1,95 @@
+# {{PROYECTO}} — rediseño
+
+{{UNA_LINEA: qué es este proyecto y para quién. Ej: "Rediseño del sitio de Clínica X
+(Caracas) más acompañamiento SEO. Estamos en licitación, no adjudicados."}}
+
+## Autoridades del proyecto
+
+Estos archivos mandan sobre cualquier criterio improvisado. Antes de tocar UI, léelos:
+
+| Archivo | Manda sobre | Quién lo escribe |
+|---|---|---|
+| `BRIEF.md` | Cliente, alcance, audiencia, entregables, restricciones | Humano / esta skill |
+| `PRODUCT.md` | Verdad de producto: usuarios, propósito, stack, capacidades | `/impeccable init` |
+| `DESIGN.md` | Sistema visual: tokens, tipografía, paleta, componentes, motion | `/impeccable document` o el flujo *new-work* |
+| `CONTENT.md` | Inventario del sitio actual y qué se preserva o descarta | Humano / esta skill |
+
+Si algo contradice a `DESIGN.md`, gana `DESIGN.md`. Si `DESIGN.md` no existe todavía, el
+trabajo de UI está inventándose el criterio: corre `/impeccable init` primero.
+
+## Qué skill usar cuándo
+
+- **Rediseñar, dar forma, criticar, auditar o pulir una interfaz** → `impeccable`. Es el
+  motor. Subcomandos: `shape` (planear antes de codear), `document` (extraer DESIGN.md del
+  código), `critique` (revisión UX), `audit` (a11y, perf, responsive), `polish`, `animate`,
+  `typeset`, `colorize`, `extract`.
+- **Decidir la dirección visual antes de escribir CSS** → `frontend-design` (Anthropic).
+  Ver abajo: es la que define *qué* paleta, tipografía y layout elegir y por qué.
+- **Dirección estética y evitar el look genérico de IA** → `design-taste-frontend`,
+  `redesign-existing-projects`, `high-end-visual-design`, o la skill de estilo concreta
+  (`minimalist-ui`, `industrial-brutalist-ui`).
+- **Consultar paletas, pares tipográficos, guías UX o presets de motion** →
+  `ui-ux-pro-max`.
+- **Detalle de interacción y motion** → `emil-design-eng`, `animate`,
+  `animation-vocabulary`, `improve-animations`.
+- **Identidad de marca y tableros de guidelines** → `brandkit`.
+
+### Cuándo usar `frontend-design` específicamente
+
+Es la skill de **criterio**, no de ejecución. No genera código ni consulta bases de datos:
+te dice cómo tomar la decisión de diseño y cómo saber si la tomaste mal. Úsala cuando:
+
+- **Arranca una interfaz nueva o se reencuadra una existente**, y todavía no está decidido
+  el carácter visual. Antes de la primera línea de CSS, no después.
+- **Hay que elegir paleta y tipografía** y no quieres los defaults. Trae el proceso de dos
+  pasadas: primero un plan compacto de tokens (4–6 hex nombrados, 2+ familias por rol,
+  concepto de layout, y *un* elemento firma), después una autocrítica contra el brief, y
+  sólo entonces el código.
+- **El diseño quedó soso, genérico o "hecho por IA"** y no sabes exactamente por qué. Trae
+  el calibrador: los tres looks en los que la IA cae por defecto (crema #F4F1EA con serif
+  de alto contraste y acento terracota; casi-negro con un acento verde ácido o bermellón;
+  broadsheet con filetes finos, radio cero y columnas densas). Si tu diseño es uno de esos
+  y el brief no lo pidió, es un default disfrazado de decisión.
+- **Hay que escribir copy de interfaz** — labels, botones, estados vacíos, errores. Tiene
+  una sección propia: voz activa, el mismo verbo a lo largo del flujo, errores que dicen
+  qué pasó y cómo arreglarlo, vacíos que invitan a actuar.
+- **Hay que decidir dónde gastar la audacia.** Su regla: una sola cosa memorable, todo lo
+  demás callado y disciplinado.
+
+**Cuándo NO:** si ya existe `DESIGN.md`, la dirección está decidida y manda el documento —
+`frontend-design` no lo revoca. Para ejecutar el sistema ya definido usa `impeccable`; para
+buscar un par tipográfico concreto usa `ui-ux-pro-max`. Y si el brief pide explícitamente
+uno de los tres looks del calibrador, el brief gana: la regla es contra el default
+inconsciente, no contra la petición del cliente.
+
+**Cómo se combina:** `frontend-design` decide la dirección → `impeccable` la formaliza en
+`DESIGN.md` y la ejecuta → `ui-ux-pro-max` surte los datos concretos → `emil-design-eng` y
+`animate` pulen la interacción.
+
+## Stack
+
+{{STACK: framework, styling, build, deploy. Si todavía no se decide, dilo así en vez de
+inventar uno.}}
+
+## Cómo correr el proyecto
+
+```bash
+{{COMANDO_DEV}}
+```
+
+## Reglas que no son cosméticas
+
+{{Restricciones reales del proyecto que bloquean, no preferencias. Ejemplos del tipo de
+cosa que va aquí — bórralos y pon los tuyos:}}
+
+- {{Compromisos de marca que no se negocian: logo, nombre, colores institucionales.}}
+- {{Contenido que no se puede inventar: testimonios, resultados, cifras, credenciales.
+  Si el cliente no lo entregó, va con placeholder neutro y aviso explícito.}}
+- {{Restricciones legales, de accesibilidad o de compliance del sector.}}
+- {{Si el sitio no está adjudicado o es una demo: protección contra indexado y descargo
+  visible.}}
+
+## Qué NO se toca
+
+{{Archivos, carpetas o comportamientos fuera de alcance. Ser explícito aquí ahorra
+reversiones.}}

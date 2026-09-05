@@ -1,0 +1,15 @@
+# Instrucciones para agentes
+
+Las reglas de este proyecto viven en **[`CLAUDE.md`](./CLAUDE.md)**. Léelo antes de
+trabajar.
+
+Este archivo existe sólo para que los agentes que buscan `AGENTS.md` por convención
+(Codex, Cursor, Gemini CLI, entre otros) encuentren el camino. **No dupliques el contenido
+aquí** — dos copias divergen y nadie sabe cuál manda.
+
+## Resumen de un vistazo
+
+Documentos que mandan, en orden: `BRIEF.md` → `PRODUCT.md` → `DESIGN.md` → `CONTENT.md`.
+
+Si `DESIGN.md` todavía no existe, no empieces a escribir UI. Corre `/impeccable init` y
+después `/impeccable document` (sitio existente) o el flujo *new-work* (identidad nueva).
