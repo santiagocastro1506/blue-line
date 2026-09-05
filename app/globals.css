@@ -1,0 +1,773 @@
+/*
+  Blue Line — a diazo sheet, not a dashboard.
+
+  The ground is Prussian blue because that is what a survey print is made of,
+  not because dark mode is a preference. Linework is the unexposed paper showing
+  through. Hue outside the blue is reserved for one thing only: classifying data.
+  Every colour below is either the sheet, the ink on it, or a zoning class.
+*/
+
+:root {
+  /* The sheet itself */
+  --sheet-deep: #071829;
+  --sheet: #0b2239;
+  --sheet-raised: #0e2c48;
+
+  /* Ink: unexposed paper, at four strengths */
+  --line: #dce9f2;
+  --line-soft: #9cbad3;
+  --line-quiet: #6d93b4;
+  --line-faint: #3c6386;
+
+  /* The mark: a pencil laid over the finished print. The one warm thing here. */
+  --mark: #e4b33c;
+  --mark-deep: #b8862a;
+
+  /* Zoning classes, in the colours NYC's own zoning maps use. The analyst
+     already reads these; inventing a palette would make them re-learn it. */
+  --zone-r: #f0d264;
+  --zone-c: #e8836b;
+  --zone-m: #b08bd6;
+  --zone-park: #6fbf73;
+  --zone-other: #7fa8c9;
+
+  --danger: #ff8a73;
+
+  --rule: rgba(157, 189, 214, 0.22);
+  --rule-strong: rgba(157, 189, 214, 0.4);
+
+  /* A drawing sheet is measured in whole units. */
+  --u: 4px;
+  --gutter: 14px;
+
+  --font-sheet: var(--font-b612), ui-sans-serif, system-ui, sans-serif;
+  --font-figure: var(--font-b612-mono), ui-monospace, "SF Mono", monospace;
+  --font-block: var(--font-archivo-narrow), var(--font-b612), sans-serif;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--sheet-deep);
+  color: var(--line);
+  font-family: var(--font-sheet);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* Browser surfaces belong to the sheet too. */
+::selection {
+  background: var(--mark);
+  color: var(--sheet-deep);
+}
+
+:focus-visible {
+  outline: 1.5px solid var(--mark);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--sheet-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-faint);
+  border: 2px solid var(--sheet-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--line-quiet);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-faint) var(--sheet-deep);
+}
+
+input,
+button,
+textarea {
+  font: inherit;
+  color: inherit;
+  caret-color: var(--mark);
+}
+
+/* Every figure on a drawing is set in tabular figures, or the columns lie. */
+.figure {
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+
+/* Title-block lettering: condensed engineering caps, the way a sheet is titled. */
+.block-label {
+  font-family: var(--font-block);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--line-quiet);
+}
+
+/* ------------------------------------------------------------------ layout */
+
+.sheet {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100dvh;
+  width: 100%;
+  background: var(--sheet);
+  position: relative;
+}
+
+.sheet-body {
+  position: relative;
+  overflow: hidden;
+}
+
+.map-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* MapLibre's stylesheet is imported by the map component, so it lands after
+   this file and its `.maplibregl-map { position: relative }` beats a bare
+   `.map-gl` at equal specificity, collapsing the element to zero height. Two
+   classes settle it. */
+.map-canvas .map-gl {
+  position: absolute;
+  inset: 0;
+}
+
+/* The map runs to all four edges. The rails sit on the print, as a title block
+   and a legend sit on a drawing: ruled panels, part of the sheet, never cards
+   floating in a gutter. */
+.rail {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--sheet) 92%, transparent);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rail-left {
+  left: 0;
+  width: 232px;
+  border-right: 1px solid var(--rule-strong);
+}
+
+.rail-right {
+  right: 0;
+  width: 344px;
+  border-left: 1px solid var(--rule-strong);
+}
+
+.rail-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+.rail-section {
+  padding: 12px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.rail-section:last-child {
+  border-bottom: none;
+}
+
+/* --------------------------------------------------------------- title block */
+
+.title-block {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  background: var(--sheet-deep);
+  min-height: 46px;
+  position: relative;
+  z-index: 10;
+}
+
+.title-block-name {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 16px;
+  border-right: 1px solid var(--rule-strong);
+  min-width: 232px;
+}
+
+.title-block-name h1 {
+  margin: 0;
+  font-family: var(--font-block);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--line);
+}
+
+.title-block-name p {
+  margin: 1px 0 0;
+  font-size: 10.5px;
+  color: var(--line-quiet);
+  letter-spacing: 0.02em;
+}
+
+.title-block-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+/* --------------------------------------------------------------------- query */
+
+.query-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.query-input {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: none;
+  padding: 0 16px;
+  font-size: 13.5px;
+  color: var(--line);
+  letter-spacing: 0.005em;
+}
+
+.query-input::placeholder {
+  color: var(--line-quiet);
+  font-style: italic;
+}
+
+.query-input:focus {
+  outline: none;
+  background: color-mix(in srgb, var(--mark) 7%, transparent);
+}
+
+.query-submit {
+  height: 100%;
+  padding: 0 18px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid var(--rule);
+  cursor: pointer;
+  font-family: var(--font-block);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--line-soft);
+  transition: color 140ms ease-out, background-color 140ms ease-out;
+}
+
+.query-submit {
+  color: var(--line);
+}
+
+.query-submit:hover:not(:disabled) {
+  color: var(--mark);
+  background: color-mix(in srgb, var(--mark) 8%, transparent);
+}
+
+.query-submit:disabled {
+  color: var(--line-faint);
+  cursor: not-allowed;
+}
+
+/* ------------------------------------------------------------------- controls */
+
+.tool-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--rule-strong);
+}
+
+.tool {
+  flex: 1;
+  padding: 7px 6px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid var(--rule);
+  cursor: pointer;
+  font-family: var(--font-block);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--line-quiet);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: color 140ms ease-out, background-color 140ms ease-out;
+}
+
+.tool:last-child {
+  border-right: none;
+}
+
+.tool:hover:not(:disabled) {
+  color: var(--line);
+  background: color-mix(in srgb, var(--line) 6%, transparent);
+}
+
+.tool[aria-pressed="true"] {
+  color: var(--sheet-deep);
+  background: var(--mark);
+}
+
+.tool:disabled {
+  color: var(--line-faint);
+  cursor: not-allowed;
+}
+
+.tool svg {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+/* --------------------------------------------------------------- the legend */
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 3.5px 0;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--line-soft);
+  font-size: 11.5px;
+  transition: color 120ms ease-out;
+}
+
+.legend-row:hover {
+  color: var(--line);
+}
+
+.legend-row[data-off="true"] {
+  color: var(--line-faint);
+}
+
+/* Class is never carried by colour alone: the swatch has a hatch pattern and
+   the row is always named in words. */
+.legend-swatch {
+  width: 15px;
+  height: 11px;
+  flex: none;
+  border: 1px solid currentColor;
+  position: relative;
+  overflow: hidden;
+}
+
+.legend-count {
+  margin-left: auto;
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+  color: var(--line-faint);
+}
+
+/* ------------------------------------------------------- the margin schedule */
+
+.reading {
+  padding: 14px var(--gutter) 12px;
+  border-bottom: 1px solid var(--rule-strong);
+}
+
+.reading-figure {
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--mark);
+  display: block;
+}
+
+.reading-unit {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--mark-deep);
+  margin-left: 4px;
+}
+
+.reading-provenance {
+  margin-top: 7px;
+  font-family: var(--font-figure);
+  font-size: 9.5px;
+  line-height: 1.55;
+  color: var(--line-faint);
+  letter-spacing: 0;
+}
+
+.schedule {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.schedule th {
+  font-family: var(--font-block);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--line-quiet);
+  text-align: left;
+  padding: 5px var(--gutter);
+  border-bottom: 1px solid var(--rule-strong);
+  position: sticky;
+  top: 0;
+  background: var(--sheet);
+  z-index: 1;
+}
+
+.schedule th.num,
+.schedule td.num {
+  text-align: right;
+  font-family: var(--font-figure);
+  font-variant-numeric: tabular-nums;
+}
+
+.schedule td {
+  padding: 5px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+  color: var(--line-soft);
+  vertical-align: top;
+}
+
+.schedule tbody tr {
+  cursor: pointer;
+  transition: background-color 110ms ease-out;
+}
+
+.schedule tbody tr:hover {
+  background: color-mix(in srgb, var(--line) 6%, transparent);
+}
+
+.schedule tbody tr[data-selected="true"] {
+  background: color-mix(in srgb, var(--mark) 13%, transparent);
+}
+
+.schedule tbody tr[data-selected="true"] td {
+  color: var(--line);
+}
+
+.addr {
+  color: var(--line);
+  display: block;
+  letter-spacing: 0.005em;
+}
+
+.bbl {
+  font-family: var(--font-figure);
+  font-size: 9.5px;
+  color: var(--line-faint);
+}
+
+/* --------------------------------------------------------- revision strip */
+
+.revision-strip {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 5px 16px;
+  border-top: 1px solid var(--rule-strong);
+  background: var(--sheet-deep);
+  font-family: var(--font-figure);
+  font-size: 9.5px;
+  color: var(--line-faint);
+  letter-spacing: 0.01em;
+  min-height: 26px;
+  overflow-x: auto;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.revision-strip a {
+  color: var(--line-quiet);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--line-faint);
+}
+
+.revision-strip a:hover {
+  color: var(--mark);
+  text-decoration-color: var(--mark);
+}
+
+.revision-spacer {
+  margin-left: auto;
+}
+
+/* ------------------------------------------------------------- filter print */
+
+.filter-print {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+
+.clause {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid var(--rule-strong);
+  font-size: 10.5px;
+  color: var(--line-soft);
+  background: color-mix(in srgb, var(--line) 4%, transparent);
+}
+
+.clause button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--line-faint);
+  line-height: 1;
+  display: flex;
+}
+
+.clause button:hover {
+  color: var(--danger);
+}
+
+.clause svg {
+  width: 9px;
+  height: 9px;
+}
+
+/* ------------------------------------------------------------------- states */
+
+.note {
+  font-size: 11px;
+  color: var(--line-quiet);
+  line-height: 1.5;
+}
+
+.note strong {
+  color: var(--line-soft);
+  font-weight: 600;
+}
+
+.note-warn {
+  color: var(--danger);
+}
+
+/* The exposure state. A diazo print develops; so does this sheet, and the wait
+   for a WASM Postgres cold start is the developing time made visible. */
+.developing {
+  position: relative;
+  overflow: hidden;
+}
+
+.developing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--line) 12%, transparent) 50%,
+    transparent 100%
+  );
+  animation: expose 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes expose {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* The one authored moment: a closed boundary letters its figure into the
+   margin, the way a surveyor letters a computed area onto a plat. */
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.lettered {
+  animation: letter-in 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .developing::after {
+    animation: none;
+  }
+  .lettered {
+    animation: none;
+  }
+  * {
+    transition-duration: 1ms !important;
+  }
+}
+
+/* -------------------------------------------------------------- maplibre */
+
+.maplibregl-map {
+  font-family: var(--font-sheet);
+}
+
+.maplibregl-canvas:focus {
+  outline: none;
+}
+
+/* MapLibre's own controls belong to no design system; the sheet draws its own. */
+.maplibregl-ctrl-attrib,
+.maplibregl-ctrl-logo,
+.maplibregl-ctrl-bottom-right,
+.maplibregl-ctrl-bottom-left {
+  display: none !important;
+}
+
+.map-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 6;
+  padding: 5px 12px;
+  background: var(--sheet-deep);
+  border: 1px solid var(--mark);
+  color: var(--mark);
+  font-family: var(--font-block);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 9.5px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 1100px) {
+  .rail-right {
+    width: 300px;
+  }
+  .rail-left {
+    width: 200px;
+  }
+}
+
+@media (max-width: 860px) {
+  body {
+    overflow: auto;
+  }
+
+  .sheet {
+    height: auto;
+    min-height: 100dvh;
+    grid-template-rows: auto auto auto;
+  }
+
+  .sheet-body {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  .map-canvas {
+    position: relative;
+    height: 58dvh;
+    min-height: 340px;
+    order: 1;
+  }
+
+  /* On a phone the measurement is what the reader came for, so it follows the
+     print directly; the legend and tools continue below it. */
+  .rail-right {
+    order: 2;
+  }
+
+  .rail-left {
+    order: 3;
+  }
+
+  /* Four classes across one line instead of four rows, so the reading is not
+     pushed a screen further down. */
+  .legend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 14px;
+  }
+
+  /* On a narrow sheet the rails come off the print and stack beneath it,
+     the way a drawing's legend continues onto a second sheet. */
+  .rail {
+    position: static;
+    width: 100% !important;
+    border: none;
+    border-top: 1px solid var(--rule-strong);
+    background: var(--sheet);
+  }
+
+  .rail-scroll {
+    overflow: visible;
+  }
+
+  .title-block {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .title-block-name {
+    border-right: none;
+    border-bottom: 1px solid var(--rule);
+    min-width: 0;
+  }
+
+  .query-input {
+    padding: 10px 16px;
+  }
+
+  .schedule th {
+    position: static;
+  }
+}

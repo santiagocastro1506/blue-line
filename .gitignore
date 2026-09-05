@@ -1,5 +1,10 @@
 node_modules/
 .next/
+out/
+.env
 .env*.local
 .vercel
 .agents/
+next-env.d.ts
+*.tsbuildinfo
+.impeccable/questions/

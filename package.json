@@ -1,0 +1,33 @@
+{
+  "name": "spatial-intelligence-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A land-use analysis sheet for New York City: real parcels, real zoning, real PostGIS.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "data:parcels": "node scripts/fetch-extract.mjs",
+    "data:streets": "node scripts/fetch-osm.mjs",
+    "data": "npm run data:parcels && npm run data:streets"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-postgis": "^0.2.8",
+    "maplibre-gl": "^5.9.0",
+    "next": "^15.5.0",
+    "postgres": "^3.4.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.7.0"
+  }
+}

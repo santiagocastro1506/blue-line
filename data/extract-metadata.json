@@ -1,0 +1,20 @@
+{
+  "source": "NYC Department of City Planning (DCP_GIS) ArcGIS Feature Services",
+  "services": {
+    "parcels": "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/MAPPLUTO/FeatureServer/0",
+    "zoning": "https://services5.arcgis.com/GfwWNkhOj9bNBqoJ/arcgis/rest/services/nyzd/FeatureServer/0"
+  },
+  "bbox": {
+    "xmin": -73.9905,
+    "ymin": 40.7515,
+    "xmax": -73.9805,
+    "ymax": 40.7595
+  },
+  "srid": 4326,
+  "retrieved": "2026-09-05T21:41:47.123Z",
+  "counts": {
+    "parcels": 512,
+    "zoning": 23
+  },
+  "note": "Bounded extract. Real data, unmodified attributes. Not a citywide dataset."
+}
