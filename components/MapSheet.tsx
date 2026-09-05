@@ -64,7 +64,11 @@ function framePadding(m: MLMap) {
  * whole meaning in hue is the exact failure PRODUCT.md names. These patterns
  * match the hatches on the legend swatches.
  */
-function hatchImage(kind: 'vertical' | 'diagonal' | 'cross' | 'dots' | 'horizontal', hex: string) {
+function hatchImage(
+  kind: 'vertical' | 'diagonal' | 'cross' | 'dots' | 'horizontal',
+  hex: string,
+  alpha = 0.55,
+) {
   const S = 24; // 12 css px at pixelRatio 2 — wide enough to stay a texture
   const c = document.createElement('canvas');
   c.width = S;
@@ -76,7 +80,7 @@ function hatchImage(kind: 'vertical' | 'diagonal' | 'cross' | 'dots' | 'horizont
   g.strokeStyle = hex;
   g.fillStyle = hex;
   g.lineWidth = 1.5;
-  g.globalAlpha = 0.55;
+  g.globalAlpha = alpha;
 
   // Line-based only. A filled tile floods the print and the sheet stops being
   // white linework on Prussian ground, which is the whole thesis.
@@ -229,14 +233,14 @@ export default function MapSheet({
         load('parcels'), load('zoning'), load('streets'),
       ]);
 
-      for (const [id, kind, hex] of [
-        ['hatch-C', 'vertical', '#e8836b'],
-        ['hatch-R', 'diagonal', '#f0d264'],
-        ['hatch-M', 'cross', '#b08bd6'],
-        ['hatch-PARK', 'dots', '#6fbf73'],
-        ['hatch-OTHER', 'horizontal', '#7fa8c9'],
+      for (const [id, kind, hex, alpha] of [
+        ['hatch-C', 'vertical', '#e8836b', 0.3],
+        ['hatch-R', 'diagonal', '#f0d264', 0.6],
+        ['hatch-M', 'cross', '#b08bd6', 0.6],
+        ['hatch-PARK', 'dots', '#6fbf73', 0.7],
+        ['hatch-OTHER', 'horizontal', '#7fa8c9', 0.5],
       ] as const) {
-        const img = hatchImage(kind, hex);
+        const img = hatchImage(kind, hex, alpha);
         if (img && !m.hasImage(id)) m.addImage(id, img, { pixelRatio: 2 });
       }
 

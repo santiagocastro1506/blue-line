@@ -36,6 +36,11 @@
   --rule: rgba(157, 189, 214, 0.22);
   --rule-strong: rgba(157, 189, 214, 0.4);
 
+  /* Rail widths are tokens because the trim, the furniture and the print
+     aperture all have to agree on where the paper actually starts. */
+  --rail-l: 232px;
+  --rail-r: 344px;
+
   /* A drawing sheet is measured in whole units. */
   --u: 4px;
   --gutter: 14px;
@@ -171,13 +176,13 @@ textarea {
 
 .rail-left {
   left: 0;
-  width: 232px;
+  width: var(--rail-l);
   border-right: 1px solid var(--rule-strong);
 }
 
 .rail-right {
   right: 0;
-  width: 344px;
+  width: var(--rail-r);
   border-left: 1px solid var(--rule-strong);
 }
 
@@ -693,11 +698,9 @@ textarea {
 /* --------------------------------------------------------------- responsive */
 
 @media (max-width: 1100px) {
-  .rail-right {
-    width: 300px;
-  }
-  .rail-left {
-    width: 200px;
+  :root {
+    --rail-l: 200px;
+    --rail-r: 300px;
   }
 }
 
@@ -789,7 +792,7 @@ textarea {
    what tells you the print has a boundary and you are seeing all of it. */
 .trim {
   position: absolute;
-  inset: 10px;
+  inset: 10px calc(var(--rail-r) + 10px) 10px calc(var(--rail-l) + 10px);
   border: 1px solid var(--rule);
   pointer-events: none;
   z-index: 2;
@@ -825,7 +828,7 @@ textarea {
 
 .sheet-furniture {
   position: absolute;
-  left: 262px;
+  left: calc(var(--rail-l) + 30px);
   bottom: 22px;
   z-index: 4;
   display: flex;
@@ -860,8 +863,7 @@ textarea {
   letter-spacing: 0.02em;
 }
 
-@media (max-width: 1100px) { .sheet-furniture { left: 228px; } }
-@media (max-width: 860px) { .sheet-furniture { left: 22px; bottom: 16px; } }
+@media (max-width: 860px) { .sheet-furniture { bottom: 16px; } }
 
 /* Four tools do not fit one 232px row without clipping a label. */
 .tool-row {
@@ -874,3 +876,46 @@ textarea {
 .tool:nth-child(n + 3) { border-bottom: none; }
 
 .scalebar-label { display: flex; justify-content: space-between; }
+
+/* ------------------------------------------------- narrow sheet, corrected */
+
+@media (max-width: 860px) {
+  :root {
+    /* Rails go static below this width, so the print occupies the full sheet
+       and the trim frames all four of its edges. */
+    --rail-l: 0px;
+    --rail-r: 0px;
+  }
+
+  /* Demote the schedule, not the reading. The first viewport has to show a
+     completed analysis, and the measurement is that analysis; only the
+     40-odd row schedule belongs below the legend. Dissolving the right rail
+     lets its children take their own places in the stack. */
+  .rail-right {
+    display: contents;
+  }
+
+  .rail-right > .reading {
+    order: 2;
+    background: var(--sheet);
+    border-top: 1px solid var(--rule-strong);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+
+  .rail-left {
+    order: 3;
+  }
+
+  .rail-right > .rail-section {
+    order: 4;
+    background: var(--sheet);
+    border-top: 1px solid var(--rule-strong);
+  }
+
+  .rail-right > .rail-scroll {
+    order: 5;
+    background: var(--sheet);
+    border-top: 1px solid var(--rule-strong);
+    max-height: none;
+  }
+}
