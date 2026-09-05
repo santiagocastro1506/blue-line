@@ -49,6 +49,10 @@ export const TEXT_FIELDS = {
 const SQL_EXPR: Record<string, string> = {
   far_headroom:
     'GREATEST(COALESCE(residfar,0), COALESCE(commfar,0), COALESCE(facilfar,0)) - COALESCE(builtfar,0)',
+  // PLUTO writes an unknown construction date as 0. Compared naively, every
+  // undated lot answers "yes" to "built before 1930", which is a fabricated
+  // answer dressed as a measured one. Unknown must stay unknown.
+  yearbuilt: 'NULLIF(yearbuilt, 0)',
 };
 
 const columnFor = (field: string) => SQL_EXPR[field] ?? field;

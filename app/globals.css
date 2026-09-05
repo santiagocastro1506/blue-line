@@ -163,7 +163,7 @@ textarea {
   top: 0;
   bottom: 0;
   z-index: 5;
-  background: color-mix(in srgb, var(--sheet) 92%, transparent);
+  background: var(--sheet);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -378,7 +378,9 @@ textarea {
 }
 
 .legend-row[data-off="true"] {
-  color: var(--line-faint);
+  color: var(--line-quiet);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
 }
 
 /* Class is never carried by colour alone: the swatch has a hatch pattern and
@@ -397,7 +399,7 @@ textarea {
   font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
   font-size: 10.5px;
-  color: var(--line-faint);
+  color: var(--line-quiet);
 }
 
 /* ------------------------------------------------------- the margin schedule */
@@ -410,9 +412,9 @@ textarea {
 .reading-figure {
   font-family: var(--font-figure);
   font-variant-numeric: tabular-nums;
-  font-size: 30px;
-  line-height: 1.05;
-  letter-spacing: -0.035em;
+  font-size: 44px;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
   color: var(--mark);
   display: block;
 }
@@ -427,9 +429,9 @@ textarea {
 .reading-provenance {
   margin-top: 7px;
   font-family: var(--font-figure);
-  font-size: 9.5px;
-  line-height: 1.55;
-  color: var(--line-faint);
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--line-quiet);
   letter-spacing: 0;
 }
 
@@ -494,8 +496,8 @@ textarea {
 
 .bbl {
   font-family: var(--font-figure);
-  font-size: 9.5px;
-  color: var(--line-faint);
+  font-size: 10px;
+  color: var(--line-quiet);
 }
 
 /* --------------------------------------------------------- revision strip */
@@ -508,8 +510,8 @@ textarea {
   border-top: 1px solid var(--rule-strong);
   background: var(--sheet-deep);
   font-family: var(--font-figure);
-  font-size: 9.5px;
-  color: var(--line-faint);
+  font-size: 10px;
+  color: var(--line-quiet);
   letter-spacing: 0.01em;
   min-height: 26px;
   overflow-x: auto;
@@ -559,7 +561,7 @@ textarea {
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--line-faint);
+  color: var(--line-quiet);
   line-height: 1;
   display: flex;
 }
@@ -601,33 +603,37 @@ textarea {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
+  background: repeating-linear-gradient(
     90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--line) 12%, transparent) 50%,
-    transparent 100%
+    color-mix(in srgb, var(--line) 14%, transparent) 0 2px,
+    transparent 2px 6px
   );
-  animation: expose 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: expose 1.9s cubic-bezier(0.33, 0, 0.2, 1) infinite;
 }
 
+/* Exposure, not a sweep: the band develops across the plate and clears,
+   never travelling as an object. */
 @keyframes expose {
-  from {
-    transform: translateX(-100%);
+  0% {
+    clip-path: inset(0 100% 0 0);
   }
-  to {
-    transform: translateX(100%);
+  55% {
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    clip-path: inset(0 0 0 100%);
   }
 }
 
 /* The one authored moment: a closed boundary letters its figure into the
    margin, the way a surveyor letters a computed area onto a plat. */
+/* The figure is lettered onto the sheet left to right. No fade: ink either
+   has reached a point on the plate or it has not. */
 @keyframes letter-in {
   from {
-    opacity: 0;
     clip-path: inset(0 100% 0 0);
   }
   to {
-    opacity: 1;
     clip-path: inset(0 0 0 0);
   }
 }
@@ -720,14 +726,19 @@ textarea {
     order: 1;
   }
 
-  /* On a phone the measurement is what the reader came for, so it follows the
-     print directly; the legend and tools continue below it. */
-  .rail-right {
+  /* Tools and legend stay within reach of the print; the schedule is capped
+     and scrolls in place rather than pushing everything below 40-odd rows. */
+  .rail-left {
     order: 2;
   }
 
-  .rail-left {
+  .rail-right {
     order: 3;
+  }
+
+  .rail-right .rail-scroll {
+    max-height: 58dvh;
+    overflow-y: auto;
   }
 
   /* Four classes across one line instead of four rows, so the reading is not
@@ -771,3 +782,95 @@ textarea {
     position: static;
   }
 }
+
+/* ------------------------------------------------------- sheet furniture */
+
+/* The trim: a ruled frame inset from the paper edge, with corner ticks. It is
+   what tells you the print has a boundary and you are seeing all of it. */
+.trim {
+  position: absolute;
+  inset: 10px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.trim .tick {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-color: var(--line-quiet);
+  border-style: solid;
+  border-width: 0;
+}
+
+.trim .tl { top: -1px; left: -1px; border-top-width: 1px; border-left-width: 1px; }
+.trim .tr { top: -1px; right: -1px; border-top-width: 1px; border-right-width: 1px; }
+.trim .bl { bottom: -1px; left: -1px; border-bottom-width: 1px; border-left-width: 1px; }
+.trim .br { bottom: -1px; right: -1px; border-bottom-width: 1px; border-right-width: 1px; }
+
+.street-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 3;
+  font-family: var(--font-block);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--line-soft);
+  text-shadow: 0 0 5px var(--sheet), 0 0 5px var(--sheet), 0 0 3px var(--sheet);
+  white-space: nowrap;
+}
+
+.sheet-furniture {
+  position: absolute;
+  left: 262px;
+  bottom: 22px;
+  z-index: 4;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.north {
+  display: block;
+  overflow: visible;
+}
+
+.scalebar-rule {
+  display: flex;
+  height: 7px;
+  border: 1px solid var(--line-quiet);
+}
+
+.scalebar-rule span {
+  flex: 1;
+  border-right: 1px solid var(--line-quiet);
+}
+
+.scalebar-rule span:last-child { border-right: none; }
+.scalebar-rule span:nth-child(odd) { background: var(--line-quiet); }
+
+.scalebar-label {
+  margin-top: 3px;
+  font-size: 9.5px;
+  color: var(--line-quiet);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 1100px) { .sheet-furniture { left: 228px; } }
+@media (max-width: 860px) { .sheet-furniture { left: 22px; bottom: 16px; } }
+
+/* Four tools do not fit one 232px row without clipping a label. */
+.tool-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.tool { border-bottom: 1px solid var(--rule); }
+.tool:nth-child(even) { border-right: none; }
+.tool:nth-child(n + 3) { border-bottom: none; }
+
+.scalebar-label { display: flex; justify-content: space-between; }

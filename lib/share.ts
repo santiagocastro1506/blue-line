@@ -7,8 +7,12 @@ export type Ring = [number, number][];
  * wall. A token in a database would satisfy the letter of that and fail the
  * spirit: a portfolio link has to still work in a year, and a paused free-tier
  * database is exactly how that breaks. The boundary travels in the URL instead,
- * so the link is the record. Where DATABASE_URL is configured, the same ring
- * can also be persisted server-side; nothing here depends on that.
+ * so the link is the record.
+ *
+ * This is a deliberate deviation from PRODUCT.md, and it is the whole of the
+ * implementation: there is no `analyses` table and no server-side persistence
+ * of a ring anywhere in this codebase. Setting DATABASE_URL changes where the
+ * spatial queries run, not where analyses are stored.
  */
 
 const P = 5; // ~1 m at this latitude, which is finer than anyone draws by hand.

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 import { DEFAULT_RING, decodeRing, encodeRing, ringToWkt, type Ring } from '@/lib/share';
-import { AlertIcon, ClearIcon, CloseIcon, DrawIcon, ShareIcon } from '@/components/icons';
+import { AlertIcon, ClearIcon, CloseIcon, DrawIcon, FrameIcon, ShareIcon } from '@/components/icons';
 
 const MapSheet = dynamic(() => import('@/components/MapSheet'), { ssr: false });
 
@@ -103,6 +103,11 @@ export default function Sheet() {
   const [hiddenClasses, setHiddenClasses] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
 
+  /** The compiled filter itself, not just its rendering — the boundary
+      measurement has to be taken under the same constraint the sheet prints. */
+  const [activeFilter, setActiveFilter] = useState<unknown | null>(null);
+  const [frame, setFrame] = useState<Ring | null>(null);
+
   const mapReady = useRef(false);
 
   /* ------------------------------------------------------- boot the sheet */
@@ -119,14 +124,16 @@ export default function Sheet() {
       .catch(() => setStatus({ ready: false }));
   }, []);
 
-  const analyse = useCallback(async (r: Ring) => {
+  const analyse = useCallback(async (r: Ring, filter: unknown | null) => {
     setAnalysing(true);
     setAnalysisError(null);
     try {
       const res = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ wkt: ringToWkt(r) }),
+        // The filter travels with the boundary. Without it the schedule answers
+        // a different question than the one the filter line claims to answer.
+        body: JSON.stringify(filter ? { wkt: ringToWkt(r), filter } : { wkt: ringToWkt(r) }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'The measurement failed.');
@@ -140,8 +147,8 @@ export default function Sheet() {
   }, []);
 
   useEffect(() => {
-    if (ring) void analyse(ring);
-  }, [ring, analyse]);
+    if (ring) void analyse(ring, activeFilter);
+  }, [ring, activeFilter, analyse]);
 
   /* ------------------------------------------------------------- handlers */
 
@@ -210,6 +217,7 @@ export default function Sheet() {
         }
 
         setMatchBbls(rj.bbls ?? []);
+        setActiveFilter(cj.filter);
         setQueryState({
           kind: 'done',
           readable: rj.readable ?? [],
@@ -226,6 +234,7 @@ export default function Sheet() {
 
   const clearFilter = useCallback(() => {
     setMatchBbls([]);
+    setActiveFilter(null);
     setQueryState({ kind: 'idle' });
     setQ('');
   }, []);
@@ -286,6 +295,7 @@ export default function Sheet() {
           onDrawn={onDrawn}
           onCancelDraw={() => setDrawing(false)}
           onPickParcel={setSelectedBbl}
+          onFrameChange={(f) => setFrame(f.ring)}
           onReady={() => {
             mapReady.current = true;
           }}
@@ -305,6 +315,16 @@ export default function Sheet() {
                   <DrawIcon />
                   {drawing ? 'Drawing' : 'Draw'}
                 </button>
+                <button
+                  className="tool"
+                  type="button"
+                  onClick={() => frame && onDrawn(frame)}
+                  disabled={!frame}
+                  title="Measure the area currently in view"
+                >
+                  <FrameIcon />
+                  Frame
+                </button>
                 <button className="tool" type="button" onClick={clearBoundary} disabled={!ring}>
                   <ClearIcon />
                   Clear
@@ -315,9 +335,17 @@ export default function Sheet() {
                 </button>
               </div>
               <p className="note" style={{ marginTop: 9, marginBottom: 0 }}>
-                {drawing
-                  ? 'Click the print to set corners. Close the ring to measure it.'
-                  : 'The boundary travels in the link, so a shared sheet stays measurable.'}
+                {drawing ? (
+                  'Click the print to set corners. Close the ring to measure it.'
+                ) : (
+                  <>
+                    The boundary travels in the link, so a shared sheet stays measurable.
+                    <br />
+                    <br />
+                    Drawing corners needs a pointer. Without one, focus the print, pan with the
+                    arrow keys, and <strong>Frame</strong> measures whatever is in view.
+                  </>
+                )}
               </p>
             </div>
 
@@ -405,8 +433,8 @@ export default function Sheet() {
                   {si(Math.round(areaSqFt))} sq ft · perimeter{' '}
                   {one.format(analysis.drawn.perimeterM)} m
                   <br />
-                  {analysis.totals.parcelCount} lots touched · {analysis.totals.fullyInside} wholly
-                  inside
+                  {analysis.totals.parcelCount} lots {activeFilter ? 'matching the filter' : 'touched'} ·{' '}
+                  {analysis.totals.fullyInside} wholly inside
                   <br />
                   {String(analysis.provenance.areaBasis)} · SRID{' '}
                   {String(analysis.provenance.srid)}

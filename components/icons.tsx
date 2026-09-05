@@ -47,3 +47,10 @@ export const AlertIcon = () => (
     <path d="M8 6.6v3M8 11.4v.6" />
   </svg>
 );
+
+export const FrameIcon = () => (
+  <svg {...base} aria-hidden>
+    <path d="M2.6 5.4V2.6h2.8M10.6 2.6h2.8v2.8M13.4 10.6v2.8h-2.8M5.4 13.4H2.6v-2.8" />
+    <path d="M6.4 6.4h3.2v3.2H6.4z" />
+  </svg>
+);
