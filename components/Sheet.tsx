@@ -52,34 +52,39 @@ const si = (n: number) => int.format(n).replace(/,/g, ' ');
 
 const SQM_PER_SQFT = 0.09290304;
 
-const CLASS_META: Record<string, { name: string; colour: string; hatch: string }> = {
-  C: { name: 'Commercial', colour: '#e8836b', hatch: 'solid' },
+/**
+ * The hatch names here must match the `fill-pattern` tiles MapSheet generates
+ * for the same class. A legend that teaches a pattern the print does not use
+ * is worse than no legend: it is the second channel giving a wrong answer.
+ */
+const CLASS_META: Record<string, { name: string; colour: string; hatch: Hatch }> = {
+  C: { name: 'Commercial', colour: '#e8836b', hatch: 'vertical' },
   R: { name: 'Residential', colour: '#f0d264', hatch: 'diagonal' },
   M: { name: 'Manufacturing', colour: '#b08bd6', hatch: 'cross' },
   PARK: { name: 'Park', colour: '#6fbf73', hatch: 'dots' },
-  OTHER: { name: 'Unclassified', colour: '#7fa8c9', hatch: 'solid' },
+  OTHER: { name: 'Unclassified', colour: '#7fa8c9', hatch: 'horizontal' },
 };
 
-/** Class is never carried by colour alone; each swatch also carries a pattern. */
+type Hatch = 'vertical' | 'horizontal' | 'diagonal' | 'cross' | 'dots';
+
+/** Class is never carried by colour alone; each swatch also carries its pattern. */
 function Swatch({ cls }: { cls: string }) {
   const meta = CLASS_META[cls] ?? CLASS_META.OTHER;
   const id = `h-${cls}`;
+  const s = meta.colour;
   return (
     <span className="legend-swatch" style={{ color: meta.colour }}>
       <svg width="15" height="11" viewBox="0 0 15 11" aria-hidden style={{ display: 'block' }}>
         <defs>
           <pattern id={id} width="4" height="4" patternUnits="userSpaceOnUse">
-            {meta.hatch === 'diagonal' && <path d="M0 4L4 0" stroke={meta.colour} strokeWidth="1" />}
-            {meta.hatch === 'cross' && <path d="M0 4L4 0M0 0L4 4" stroke={meta.colour} strokeWidth="0.8" />}
-            {meta.hatch === 'dots' && <circle cx="1.4" cy="1.4" r="0.9" fill={meta.colour} />}
+            {meta.hatch === 'vertical' && <path d="M2 0V4" stroke={s} strokeWidth="1" />}
+            {meta.hatch === 'horizontal' && <path d="M0 2H4" stroke={s} strokeWidth="1" />}
+            {meta.hatch === 'diagonal' && <path d="M0 4L4 0" stroke={s} strokeWidth="1" />}
+            {meta.hatch === 'cross' && <path d="M0 4L4 0M0 0L4 4" stroke={s} strokeWidth="0.8" />}
+            {meta.hatch === 'dots' && <circle cx="1.4" cy="1.4" r="0.9" fill={s} />}
           </pattern>
         </defs>
-        <rect
-          width="15"
-          height="11"
-          fill={meta.hatch === 'solid' ? meta.colour : `url(#${id})`}
-          opacity={meta.hatch === 'solid' ? 0.55 : 1}
-        />
+        <rect width="15" height="11" fill={`url(#${id})`} />
       </svg>
     </span>
   );

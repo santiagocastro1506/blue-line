@@ -11,7 +11,6 @@
   /* The sheet itself */
   --sheet-deep: #071829;
   --sheet: #0b2239;
-  --sheet-raised: #0e2c48;
 
   /* Ink: unexposed paper, at four strengths */
   --line: #dce9f2;
@@ -23,14 +22,6 @@
   --mark: #e4b33c;
   --mark-deep: #b8862a;
 
-  /* Zoning classes, in the colours NYC's own zoning maps use. The analyst
-     already reads these; inventing a palette would make them re-learn it. */
-  --zone-r: #f0d264;
-  --zone-c: #e8836b;
-  --zone-m: #b08bd6;
-  --zone-park: #6fbf73;
-  --zone-other: #7fa8c9;
-
   --danger: #ff8a73;
 
   --rule: rgba(157, 189, 214, 0.22);
@@ -41,8 +32,6 @@
   --rail-l: 232px;
   --rail-r: 344px;
 
-  /* A drawing sheet is measured in whole units. */
-  --u: 4px;
   --gutter: 14px;
 
   --font-sheet: var(--font-b612), ui-sans-serif, system-ui, sans-serif;
@@ -290,12 +279,8 @@ textarea {
   letter-spacing: 0.13em;
   font-size: 10px;
   font-weight: 600;
-  color: var(--line-soft);
-  transition: color 140ms ease-out, background-color 140ms ease-out;
-}
-
-.query-submit {
   color: var(--line);
+  transition: color 140ms ease-out, background-color 140ms ease-out;
 }
 
 .query-submit:hover:not(:disabled) {
@@ -310,9 +295,10 @@ textarea {
 
 /* ------------------------------------------------------------------- controls */
 
+/* Four tools do not fit one 232px row without clipping a label. */
 .tool-row {
-  display: flex;
-  gap: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   border: 1px solid var(--rule-strong);
 }
 
@@ -322,6 +308,7 @@ textarea {
   background: transparent;
   border: none;
   border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
   cursor: pointer;
   font-family: var(--font-block);
   text-transform: uppercase;
@@ -336,8 +323,12 @@ textarea {
   transition: color 140ms ease-out, background-color 140ms ease-out;
 }
 
-.tool:last-child {
+.tool:nth-child(even) {
   border-right: none;
+}
+
+.tool:nth-child(n + 3) {
+  border-bottom: none;
 }
 
 .tool:hover:not(:disabled) {
@@ -857,6 +848,8 @@ textarea {
 .scalebar-rule span:nth-child(odd) { background: var(--line-quiet); }
 
 .scalebar-label {
+  display: flex;
+  justify-content: space-between;
   margin-top: 3px;
   font-size: 9.5px;
   color: var(--line-quiet);
@@ -864,18 +857,6 @@ textarea {
 }
 
 @media (max-width: 860px) { .sheet-furniture { bottom: 16px; } }
-
-/* Four tools do not fit one 232px row without clipping a label. */
-.tool-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.tool { border-bottom: 1px solid var(--rule); }
-.tool:nth-child(even) { border-right: none; }
-.tool:nth-child(n + 3) { border-bottom: none; }
-
-.scalebar-label { display: flex; justify-content: space-between; }
 
 /* ------------------------------------------------- narrow sheet, corrected */
 
