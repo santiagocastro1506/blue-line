@@ -479,8 +479,11 @@ export default function Sheet() {
               {queryState.kind === 'done' && (
                 <>
                   <div className="filter-print">
-                    {queryState.readable.map((line) => (
-                      <span className="clause" key={line}>
+                    {/* Keyed by position: a filter can legitimately carry two
+                        clauses that read identically, and a repeated string key
+                        would collapse them. */}
+                    {queryState.readable.map((line, i) => (
+                      <span className="clause" key={`${i}-${line}`}>
                         {line}
                       </span>
                     ))}

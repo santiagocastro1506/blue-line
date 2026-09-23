@@ -106,12 +106,18 @@ export async function POST(request: Request) {
 
     const zoning = await engine.query<{ zonedist: string; overlap_m2: string }>(
       `
+      -- NYZD publishes one district as several disjoint polygons: the extract
+      -- holds 23 features for 15 districts, and C6-4.5 alone is two of them.
+      -- Without the aggregate, a boundary crossing both lists the district
+      -- twice, each row carrying only part of its area. One district, one row,
+      -- its whole overlap summed.
       WITH drawn AS (SELECT ST_MakeValid(ST_SetSRID(ST_GeomFromText($1), 4326)) AS g)
       SELECT
         z.zonedist,
-        ROUND(ST_Area(ST_Intersection(z.geom, d.g)::geography)::numeric, 1) AS overlap_m2
+        ROUND(SUM(ST_Area(ST_Intersection(z.geom, d.g)::geography))::numeric, 1) AS overlap_m2
       FROM zoning_districts z, drawn d
       WHERE ST_Intersects(z.geom, d.g)
+      GROUP BY z.zonedist
       ORDER BY overlap_m2 DESC
       `,
       [wkt],
