@@ -9,6 +9,8 @@ PostGIS, and intersected against real parcel geometry; areas are computed on the
 type, so the figures are true square metres rather than square degrees. Nothing is
 approximated in the browser to make a demo look good.
 
+![The sheet, with a boundary measured over Times Square](docs/screenshot.png)
+
 ---
 
 ## What it does
@@ -164,8 +166,10 @@ boundary would defeat the entire point of the project.
   specifies persisted anonymous analyses, and this deviates from it on purpose: a portfolio
   link has to still resolve in a year, and the link is a more durable record than a database
   that can be paused. Reasoning is in [`lib/share.ts`](lib/share.ts).
-- **Drawing is pointer-only.** There is no keyboard path to a spatial query. Stated here
-  rather than left for someone to discover.
+- **Drawing corners is pointer-only.** There is a non-pointer path to a spatial measurement —
+  focus the print, pan with the arrow keys, and **Frame** measures the current view — but
+  placing individual vertices needs a mouse. Stated here rather than left for someone to
+  discover.
 - **First request is slow** while WASM Postgres boots. Warm requests measure in single-digit
   to low-hundreds of milliseconds.
 - **Two transitive npm advisories** in `postcss`, inside Next's own build chain.

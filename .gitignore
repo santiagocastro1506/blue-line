@@ -4,7 +4,12 @@ out/
 .env
 .env*.local
 .vercel
-.agents/
 next-env.d.ts
 *.tsbuildinfo
-.impeccable/questions/
+
+# Build-process scaffolding, not the project. skills-lock.json is kept, so the
+# design stack is reproducible through the installer without shipping 13 MB of
+# vendored markdown.
+.claude/
+.impeccable/
+.agents/
