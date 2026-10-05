@@ -48,7 +48,18 @@ export function resolveProvider(): Provider | null {
 const geminiKey = () => key('GEMINI_API_KEY') ?? key('GOOGLE_API_KEY');
 
 export const ANTHROPIC_MODEL = key('ANTHROPIC_MODEL') ?? 'claude-sonnet-5';
-export const GEMINI_MODEL = key('GEMINI_MODEL') ?? 'gemini-2.5-flash';
+
+/**
+ * A pinned model is a dated dependency. This project shipped on
+ * gemini-2.5-flash and came back a month later to a 404: "no longer available
+ * to new users". A portfolio link has to outlive that.
+ *
+ * So the fast, stable model is tried first, and a retirement falls back to the
+ * alias Google maintains, which cannot 404 the same way. The response names
+ * whichever one actually answered.
+ */
+export const GEMINI_MODEL = key('GEMINI_MODEL') ?? 'gemini-3.1-flash-lite';
+const GEMINI_FALLBACK = 'gemini-flash-latest';
 
 export async function compileWithModel(
   provider: Provider,
@@ -93,11 +104,28 @@ async function viaAnthropic(system: string, phrase: string): Promise<CompileResu
 /* ------------------------------------------------------------------ Gemini */
 
 async function viaGemini(system: string, phrase: string): Promise<CompileResult> {
+  try {
+    return await callGemini(GEMINI_MODEL, system, phrase);
+  } catch (err) {
+    // A retired model answers 404 NOT_FOUND. Anything else — a bad key, a rate
+    // limit, a malformed schema — is a real error and must not be retried into
+    // a second identical failure.
+    const retired = /\b404\b|NOT_FOUND|no longer available/i.test(String(err));
+    if (!retired || GEMINI_MODEL === GEMINI_FALLBACK) throw err;
+    return callGemini(GEMINI_FALLBACK, system, phrase);
+  }
+}
+
+async function callGemini(
+  model: string,
+  system: string,
+  phrase: string,
+): Promise<CompileResult> {
   const { GoogleGenAI, FunctionCallingConfigMode } = await import('@google/genai');
   const client = new GoogleGenAI({ apiKey: geminiKey() as string });
 
   const response = await client.models.generateContent({
-    model: GEMINI_MODEL,
+    model,
     contents: phrase,
     config: {
       systemInstruction: system,
@@ -133,7 +161,7 @@ async function viaGemini(system: string, phrase: string): Promise<CompileResult>
     input: call?.args ?? null,
     provenance: {
       provider: 'gemini',
-      model: GEMINI_MODEL,
+      model,
       inputTokens: usage?.promptTokenCount ?? null,
       outputTokens: usage?.candidatesTokenCount ?? null,
     },
